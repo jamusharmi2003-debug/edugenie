@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        EduGenie - AI Learning Assistant
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+
+<header>
+
+    <div class="logo">
+        E
+    </div>
+
+    <div>
+
+        <h1>
+            EduGenie
+        </h1>
+
+        <p>
+            Google Gemini Powered Learning Assistant
+        </p>
+
+    </div>
+
+</header>
+<div class="user-area">
+    Welcome, {{ username }}!
+    <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+</div>
+
+
+<main>
+
+
+    <aside>
+
+        <button
+            class="nav active"
+            onclick="showSection('chat', this)"
+        >
+            💬 AI Chat
+        </button>
+
+
+        <button
+            class="nav"
+            onclick="showSection('explain', this)"
+        >
+            📚 Explain
+        </button>
+
+
+        <button
+            class="nav"
+            onclick="showSection('quiz', this)"
+        >
+            🧠 Quiz
+        </button>
+
+
+        <button
+            class="nav"
+            onclick="showSection('path', this)"
+        >
+            🛣 Learning Path
+        </button>
+
+    </aside>
+
+
+    <section class="content">
+
+
+        <!-- CHAT -->
+
+        <div
+            id="chat"
+            class="section active"
+        >
+
+            <h2>
+                Ask EduGenie
+            </h2>
+
+            <p>
+                Ask any question and get an
+                AI-powered answer.
+            </p>
+
+
+            <textarea
+                id="question"
+                placeholder="Ask anything... Example: Explain inheritance in Java"
+            ></textarea>
+
+
+            <button
+                onclick="askQuestion()"
+            >
+                Ask EduGenie
+            </button>
+
+
+            <div
+                id="answer"
+                class="answer"
+            ></div>
+
+        </div>
+
+
+        <!-- EXPLAIN -->
+
+        <div
+            id="explain"
+            class="section"
+        >
+
+            <h2>
+                Explain a Topic
+            </h2>
+
+            <input
+                id="topic"
+                placeholder="Example: Prim's Algorithm"
+            >
+
+
+            <select id="level">
+
+                <option value="beginner">
+                    Beginner
+                </option>
+
+                <option value="school">
+                    School
+                </option>
+
+                <option value="college">
+                    College
+                </option>
+
+            </select>
+
+
+            <button
+                onclick="explainTopic()"
+            >
+                Explain Topic
+            </button>
+
+
+            <div
+                id="explanation"
+                class="answer"
+            ></div>
+
+        </div>
+
+
+        <!-- QUIZ -->
+
+        <div
+            id="quiz"
+            class="section"
+        >
+
+            <h2>
+                AI Quiz
+            </h2>
+
+
+            <input
+                id="quizTopic"
+                placeholder="Example: Python"
+            >
+
+
+            <select id="difficulty">
+
+                <option value="easy">
+                    Easy
+                </option>
+
+                <option
+                    value="medium"
+                    selected
+                >
+                    Medium
+                </option>
+
+                <option value="hard">
+                    Hard
+                </option>
+
+            </select>
+
+
+            <select id="count">
+
+                <option value="3">
+                    3 Questions
+                </option>
+
+                <option
+                    value="5"
+                    selected
+                >
+                    5 Questions
+                </option>
+
+                <option value="10">
+                    10 Questions
+                </option>
+
+            </select>
+
+
+            <button
+                onclick="generateQuiz()"
+            >
+                Generate Quiz
+            </button>
+
+
+            <div
+                id="quizBox"
+            ></div>
+
+        </div>
+
+
+        <!-- LEARNING PATH -->
+
+        <div
+            id="path"
+            class="section"
+        >
+
+            <h2>
+                Learning Path
+            </h2>
+
+
+            <input
+                id="pathTopic"
+                placeholder="Example: Python Programming"
+            >
+
+
+            <select id="pathLevel">
+
+                <option value="beginner">
+                    Beginner
+                </option>
+
+                <option value="intermediate">
+                    Intermediate
+                </option>
+
+                <option value="advanced">
+                    Advanced
+                </option>
+
+            </select>
+
+
+            <button
+                onclick="createPath()"
+            >
+                Create Learning Path
+            </button>
+
+
+            <div
+                id="pathResult"
+                class="answer"
+            ></div>
+
+        </div>
+
+
+    </section>
+
+</main>
+
+
+<script>
+
+
+function showSection(
+    id,
+    button
+) {
+
+    document
+        .querySelectorAll(".section")
+        .forEach(
+            section => {
+                section.classList.remove(
+                    "active"
+                );
+            }
+        );
+
+
+    document
+        .querySelectorAll(".nav")
+        .forEach(
+            item => {
+                item.classList.remove(
+                    "active"
+                );
+            }
+        );
+
+
+    document
+        .getElementById(id)
+        .classList.add(
+            "active"
+        );
+
+
+    button.classList.add(
+        "active"
+    );
+}
+
+
+/* -----------------------
+   GENERAL QUESTION
+----------------------- */
+
+async function askQuestion() {
+
+    const question =
+        document
+        .getElementById("question")
+        .value
+        .trim();
+
+
+    if (!question) {
+
+        alert(
+            "Please enter a question."
+        );
+
+        return;
+    }
+
+
+    const answer =
+        document.getElementById(
+            "answer"
+        );
+
+
+    answer.innerText =
+        "EduGenie is thinking...";
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/ask",
+                {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        question:
+                            question
+                    })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!data.success) {
+
+            throw new Error(
+                data.error
+            );
+        }
+
+
+        answer.innerText =
+            data.answer;
+
+
+    } catch (error) {
+
+        answer.innerText =
+            "Error: " +
+            error.message;
+    }
+}
+
+
+/* -----------------------
+   EXPLAIN
+----------------------- */
+
+async function explainTopic() {
+
+    const topic =
+        document
+        .getElementById("topic")
+        .value
+        .trim();
+
+
+    const level =
+        document
+        .getElementById("level")
+        .value;
+
+
+    if (!topic) {
+
+        alert(
+            "Please enter a topic."
+        );
+
+        return;
+    }
+
+
+    const box =
+        document.getElementById(
+            "explanation"
+        );
+
+
+    box.innerText =
+        "Generating explanation...";
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/explain",
+                {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        topic: topic,
+
+                        level: level
+
+                    })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!data.success) {
+
+            throw new Error(
+                data.error
+            );
+        }
+
+
+        box.innerText =
+            data.answer;
+
+
+    } catch (error) {
+
+        box.innerText =
+            "Error: " +
+            error.message;
+    }
+}
+
+
+/* -----------------------
+   QUIZ
+----------------------- */
+
+async function generateQuiz() {
+
+    const topic =
+        document
+        .getElementById("quizTopic")
+        .value
+        .trim();
+
+
+    const difficulty =
+        document
+        .getElementById("difficulty")
+        .value;
+
+
+    const count =
+        Number(
+            document
+            .getElementById("count")
+            .value
+        );
+
+
+    if (!topic) {
+
+        alert(
+            "Please enter a quiz topic."
+        );
+
+        return;
+    }
+
+
+    const box =
+        document.getElementById(
+            "quizBox"
+        );
+
+
+    box.innerHTML =
+        "<p>Generating quiz...</p>";
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/quiz",
+                {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        topic:
+                            topic,
+
+                        difficulty:
+                            difficulty,
+
+                        count:
+                            count
+                    })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!data.success) {
+
+            throw new Error(
+                data.error
+            );
+        }
+
+
+        renderQuiz(
+            data.quiz
+        );
+
+
+    } catch (error) {
+
+        box.innerText =
+            "Error: " +
+            error.message;
+    }
+}
+
+
+function renderQuiz(
+    quiz
+) {
+
+    const box =
+        document.getElementById(
+            "quizBox"
+        );
+
+
+    box.innerHTML = "";
+
+
+    quiz.questions.forEach(
+        (q, index) => {
+
+            const card =
+                document.createElement(
+                    "div"
+                );
+
+
+            card.className =
+                "quiz-card";
+
+
+            const title =
+                document.createElement(
+                    "h3"
+                );
+
+
+            title.innerText =
+                (
+                    index + 1
+                ) +
+                ". " +
+                q.question;
+
+
+            card.appendChild(
+                title
+            );
+
+
+            q.options.forEach(
+                (option, optionIndex) => {
+
+                    const label =
+                        document.createElement(
+                            "label"
+                        );
+
+
+                    label.className =
+                        "option";
+
+
+                    label.innerHTML =
+                        `
+                        <input
+                            type="radio"
+                            name="question${index}"
+                            value="${optionIndex}"
+                        >
+                        ${option}
+                        `;
+
+
+                    card.appendChild(
+                        label
+                    );
+
+                }
+            );
+
+
+            box.appendChild(
+                card
+            );
+
+        }
+    );
+
+
+    const submit =
+        document.createElement(
+            "button"
+        );
+
+
+    submit.innerText =
+        "Submit Quiz";
+
+
+    submit.onclick =
+        function () {
+
+            calculateScore(
+                quiz
+            );
+        };
+
+
+    box.appendChild(
+        submit
+    );
+}
+
+
+function calculateScore(
+    quiz
+) {
+
+    let score = 0;
+
+
+    quiz.questions.forEach(
+        (q, index) => {
+
+            const selected =
+                document.querySelector(
+                    `input[name="question${index}"]:checked`
+                );
+
+
+            if (
+                selected &&
+                Number(
+                    selected.value
+                ) === q.answer
+            ) {
+
+                score++;
+            }
+
+        }
+    );
+
+
+    const total =
+        quiz.questions.length;
+
+
+    const percentage =
+        Math.round(
+            (
+                score /
+                total
+            ) * 100
+        );
+
+
+    const box =
+        document.getElementById(
+            "quizBox"
+        );
+
+
+    const result =
+        document.createElement(
+            "div"
+        );
+
+
+    result.className =
+        "answer";
+
+
+    result.innerText =
+        `Your Score: ${score}/${total}
+Percentage: ${percentage}%`;
+
+
+    box.appendChild(
+        result
+    );
+}
+
+
+/* -----------------------
+   LEARNING PATH
+----------------------- */
+
+async function createPath() {
+
+    const topic =
+        document
+        .getElementById(
+            "pathTopic"
+        )
+        .value
+        .trim();
+
+
+    const level =
+        document
+        .getElementById(
+            "pathLevel"
+        )
+        .value;
+
+
+    if (!topic) {
+
+        alert(
+            "Please enter a topic."
+        );
+
+        return;
+    }
+
+
+    const box =
+        document.getElementById(
+            "pathResult"
+        );
+
+
+    box.innerText =
+        "Creating your learning path...";
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/learning-path",
+                {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        topic:
+                            topic,
+
+                        level:
+                            level
+                    })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!data.success) {
+
+            throw new Error(
+                data.error
+            );
+        }
+
+
+        box.innerText =
+            data.answer;
+
+
+    } catch (error) {
+
+        box.innerText =
+            "Error: " +
+            error.message;
+    }
+}
+
+
+</script>
+
+
+</body>
+
+</html>
